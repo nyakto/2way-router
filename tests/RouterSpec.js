@@ -107,4 +107,43 @@ describe("router", function () {
             });
         });
     });
+
+    describe("works with params", function () {
+        var router = new Router();
+        var routeWithDefaultParams = router.route("/news/", {
+            page: 1
+        });
+        var routeWithPageNumber = router.route("/news/page/", router.param.number("page"), "/");
+        var routeWithPageName = router.route("/page/" + router.param.string("name") + "/");
+
+        it("supports default values for params", function (done) {
+            router.detect("/news/", function (route, params) {
+                expect(route).toBe(routeWithDefaultParams);
+                expect(params).toEqual({
+                    page: 1
+                });
+                done();
+            });
+        });
+
+        it("supports number params", function (done) {
+            router.detect("/news/page/2/", function (route, params) {
+                expect(route).toBe(routeWithPageNumber);
+                expect(params).toEqual({
+                    page: 2
+                });
+                done();
+            });
+        });
+
+        it("supports string params", function (done) {
+            router.detect("/page/about/", function (route, params) {
+                expect(route).toBe(routeWithPageName);
+                expect(params).toEqual({
+                    name: 'about'
+                });
+                done();
+            });
+        });
+    });
 });
