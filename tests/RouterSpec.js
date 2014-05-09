@@ -1,4 +1,4 @@
-/*global describe, it, expect, beforeEach*/
+/*global describe, it, expect*/
 var Router = require('../index');
 
 describe("router", function () {
