@@ -11,21 +11,31 @@ function RouteMap() {
     this._assignedRoute = null;
 }
 
-function simplifyPath(path) {
-    var simplifiedPath = path.split('/').filter(function (part) {
-        return part !== '';
-    });
-    if (path.length === 0 || path.substr(path.length - 1) === '/') {
-        simplifiedPath.push('/');
+function splitPath(path) {
+    var pathArray = [],
+        re = /\//g,
+        pos = 0,
+        start,
+        match;
+    while ((match = re.exec(path)) !== null) {
+        start = re.lastIndex - match[0].length;
+        if (start > pos) {
+            pathArray.push(path.substr(pos, start - pos));
+        }
+        pathArray.push(match[0]);
+        pos = re.lastIndex;
     }
-    return simplifiedPath;
+    if (pos < path.length) {
+        pathArray.push(path.substr(pos));
+    }
+    return pathArray;
 }
 
 function preparePath(pathArray) {
     var result = [];
     Array.prototype.forEach.call(pathArray, function (path) {
         if (typeof path === 'string') {
-            simplifyPath(path).forEach(function (path) {
+            splitPath(path).forEach(function (path) {
                 result.push(path);
             });
         } else {
@@ -119,7 +129,7 @@ Router.prototype.detect = function (path, options, callback) {
         return path.length > 0 && path[path.length - 1] === '/';
     }
 
-    path = simplifyPath(path);
+    path = splitPath(path);
     for (i = 0, len = path.length; i < len; ++i) {
         nextMap = map.findPath(path[i]);
         if (nextMap === null) {

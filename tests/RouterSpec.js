@@ -62,7 +62,7 @@ describe("router", function () {
         });
     });
 
-    describe("allows to tolerate trailing slash", function () {
+    describe("with tolerance to trailing slash", function () {
         var router = new Router();
         var routeA = router.route("/route/a");
         var routeB = router.route("/route/b/");
@@ -71,7 +71,7 @@ describe("router", function () {
         var routeD = router.route("/route/d/");
         router.route("/route/d");
 
-        it("should search path wighout trailing slash", function (done) {
+        it("should search path without trailing slash", function (done) {
             router.detect("/route/a/", {
                 tolerateTrailingSlash: true
             }, function (route) {
