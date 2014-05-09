@@ -93,6 +93,7 @@ Router.prototype.route = function (paths) {
  * @param {string} path
  * @param {object} [options]
  * @param {boolean} [options.ignoreEmpty=false]
+ * @param {boolean} [options.tolerateTrailingSlash=false]
  * @returns Route
  */
 Router.prototype.detect = function (path, options) {

@@ -21,4 +21,33 @@ describe("router", function () {
         expect(router.detect("/route/a")).toBe(routeA);
         expect(router.detect("/route/b")).toBe(routeB);
     });
+
+    it("is strict to trailing slash", function () {
+        var routeA = router.route("/route/a");
+        var routeB = router.route("/route/a/");
+        var routeC = router.route("/route/c");
+        var routeD = router.route("/route/d/");
+
+        expect(routeA).not.toBe(routeB);
+        expect(router.detect("/route/a")).toBe(routeA);
+        expect(router.detect("/route/a/")).toBe(routeB);
+        expect(router.detect("/route/c")).toBe(routeC);
+        expect(router.detect("/route/c/")).toBeNull();
+        expect(router.detect("/route/d")).toBeNull();
+        expect(router.detect("/route/d/")).toBe(routeD);
+    });
+
+    it("allows to tolerate trailing slash", function () {
+        var routeA = router.route("/route/a");
+        var routeB = router.route("/route/b/");
+
+        expect(router.detect("/route/a/")).toBeNull();
+        expect(router.detect("/route/b")).toBeNull();
+        expect(router.detect("/route/a/", {
+            tolerateTrailingSlash: true
+        })).toBe(routeA);
+        expect(router.detect("/route/b", {
+            tolerateTrailingSlash: true
+        })).toBe(routeB);
+    });
 });
