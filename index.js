@@ -99,7 +99,6 @@ Router.prototype.route = function (paths) {
  * @param {boolean} [options.ignoreEmpty=false]
  * @param {boolean} [options.tolerateTrailingSlash=false]
  * @param {function(Route)} callback
- * @returns Route
  */
 Router.prototype.detect = function (path, options, callback) {
     var map = this._map,
@@ -107,8 +106,13 @@ Router.prototype.detect = function (path, options, callback) {
         len,
         i;
 
+    if (typeof options === 'function') {
+        callback = options;
+        options = {};
+    }
+
     function tolerateTrailingSlash() {
-        return options && options.tolerateTrailingSlash;
+        return options.tolerateTrailingSlash;
     }
 
     function pathEndsWithSlash() {
@@ -122,7 +126,8 @@ Router.prototype.detect = function (path, options, callback) {
             if (i === len - 1 && pathEndsWithSlash() && tolerateTrailingSlash()) {
                 continue;
             } else {
-                return null;
+                callback(null);
+                return;
             }
         }
         map = nextMap;
@@ -131,10 +136,10 @@ Router.prototype.detect = function (path, options, callback) {
     if (route === null && tolerateTrailingSlash() && !pathEndsWithSlash()) {
         map = map.findPath('/');
         if (map !== null) {
-            return map.getAssignedRoute();
+            route = map.getAssignedRoute();
         }
     }
-    return route;
+    callback(route);
 };
 
 module.exports = Router;
