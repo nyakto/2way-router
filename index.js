@@ -12,9 +12,13 @@ function RouteMap() {
 }
 
 function simplifyPath(path) {
-    return path.split('/').filter(function (part) {
+    var simplifiedPath = path.split('/').filter(function (part) {
         return part !== '';
     });
+    if (path.length === 0 || path.substr(path.length - 1) === '/') {
+        simplifiedPath.push('/');
+    }
+    return simplifiedPath;
 }
 
 function preparePath(pathArray) {
@@ -98,16 +102,38 @@ Router.prototype.route = function (paths) {
  */
 Router.prototype.detect = function (path, options) {
     var map = this._map,
+        nextMap,
         len,
         i;
+
+    function tolerateTrailingSlash() {
+        return options && options.tolerateTrailingSlash;
+    }
+
+    function pathEndsWithSlash() {
+        return path.length > 0 && path[path.length - 1] === '/';
+    }
+
     path = simplifyPath(path);
     for (i = 0, len = path.length; i < len; ++i) {
-        map = map.findPath(path[i]);
-        if (map === null) {
-            return null;
+        nextMap = map.findPath(path[i]);
+        if (nextMap === null) {
+            if (i === len - 1 && pathEndsWithSlash() && tolerateTrailingSlash()) {
+                continue;
+            } else {
+                return null;
+            }
+        }
+        map = nextMap;
+    }
+    var route = map.getAssignedRoute();
+    if (route === null && tolerateTrailingSlash() && !pathEndsWithSlash()) {
+        map = map.findPath('/');
+        if (map !== null) {
+            return map.getAssignedRoute();
         }
     }
-    return map.getAssignedRoute();
+    return route;
 };
 
 module.exports = Router;
