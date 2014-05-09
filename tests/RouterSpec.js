@@ -13,4 +13,12 @@ describe("router", function () {
         expect(route).not.toBeNull();
         expect(route instanceof Router.Route).toBeTruthy();
     });
+
+    it("allows to detect route", function () {
+        var routeA = router.route("/route/a");
+        var routeB = router.route("/route/b");
+
+        expect(router.detect("/route/a")).toBe(routeA);
+        expect(router.detect("/route/b")).toBe(routeB);
+    });
 });
