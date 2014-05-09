@@ -1,0 +1,25 @@
+{
+  "name": "2way-router",
+  "version": "0.0.1",
+  "description": "2-way router",
+  "main": "index.js",
+  "dependencies": {
+  },
+  "directories": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nyakto/2way-router.git"
+  },
+  "keywords": [
+    "router"
+  ],
+  "author": "Stanislav Yashenkov <vampire@realtymag.ru>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nyakto/2way-router/issues"
+  },
+  "engines": {
+    "node": ">=0.8"
+  }
+}
