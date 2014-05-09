@@ -3,10 +3,8 @@
   "version": "0.0.1",
   "description": "2-way router",
   "main": "index.js",
-  "dependencies": {
-  },
-  "directories": {
-  },
+  "dependencies": {},
+  "directories": {},
   "repository": {
     "type": "git",
     "url": "git://github.com/nyakto/2way-router.git"
@@ -14,6 +12,9 @@
   "keywords": [
     "router"
   ],
+  "scripts": {
+    "test": "./node_modules/.bin/jasmine-node tests"
+  },
   "author": "Stanislav Yashenkov <vampire@realtymag.ru>",
   "license": "MIT",
   "bugs": {
@@ -21,5 +22,8 @@
   },
   "engines": {
     "node": ">=0.8"
+  },
+  "devDependencies": {
+    "jasmine-node": "~1.14.3"
   }
 }
