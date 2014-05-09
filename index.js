@@ -98,9 +98,10 @@ Router.prototype.route = function (paths) {
  * @param {object} [options]
  * @param {boolean} [options.ignoreEmpty=false]
  * @param {boolean} [options.tolerateTrailingSlash=false]
+ * @param {function(Route)} callback
  * @returns Route
  */
-Router.prototype.detect = function (path, options) {
+Router.prototype.detect = function (path, options, callback) {
     var map = this._map,
         nextMap,
         len,
