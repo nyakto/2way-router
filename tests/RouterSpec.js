@@ -110,9 +110,10 @@ describe("router", function () {
 
     describe("works with params", function () {
         var router = new Router();
-        var routeWithDefaultParams = router.route("/news/", {
-            page: 1
-        });
+        var routeWithDefaultParams = router.route("/news/")
+            .setDefaultParams({
+                page: 1
+            });
         var routeWithPageNumber = router.route("/news/page/", router.param.number("page"), "/");
         var routeWithPageName = router.route("/page/" + router.param.string("name") + "/");
 
