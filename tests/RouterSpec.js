@@ -192,90 +192,58 @@ describe("router", function () {
             });
         });
     });
-//
-//    describe("with tolerance to trailing slash", function () {
-//        var router = new Router();
-//        var routeA = router.route("/route/a");
-//        var routeB = router.route("/route/b/");
-//        var routeC = router.route("/route/c");
-//        router.route("/route/c/");
-//        var routeD = router.route("/route/d/");
-//        router.route("/route/d");
-//
-//        it("should search path without trailing slash", function (done) {
-//            router.findRoute("/route/a/", {
-//                tolerateTrailingSlash: true
-//            }).then(function (route) {
-//                expect(route).toBe(routeA);
-//                done();
-//            });
-//        });
-//
-//        it("should search path with trailing slash", function (done) {
-//            router.findRoute("/route/b", {
-//                tolerateTrailingSlash: true
-//            }).then(function (route) {
-//                expect(route).toBe(routeB);
-//                done();
-//            });
-//        });
-//
-//        it("should respect route priority for path without trailing slash", function (done) {
-//            router.findRoute("/route/c", {
-//                tolerateTrailingSlash: true
-//            }).then(function (route) {
-//                expect(route).toBe(routeC);
-//                done();
-//            });
-//        });
-//
-//        it("should respect route priority for path with trailing slash", function (done) {
-//            router.findRoute("/route/d/", {
-//                tolerateTrailingSlash: true
-//            }).then(function (route) {
-//                expect(route).toBe(routeD);
-//                done();
-//            });
-//        });
-//    });
-//
-//    describe("works with params", function () {
-//        var router = new Router();
-//        var routeWithDefaultParams = router.route("/news/")
-//            .setDefaultParams({
-//                page: 1
-//            });
-//        var routeWithPageNumber = router.route("/news/page/", router.param.number("page"), "/");
-//        var routeWithPageName = router.route("/page/" + router.param.string("name") + "/");
-//
-//        it("supports default values for params", function (done) {
-//            router.findRoute("/news/").then(function (route, params) {
-//                expect(route).toBe(routeWithDefaultParams);
-//                expect(params).toEqual({
-//                    page: 1
-//                });
-//                done();
-//            });
-//        });
-//
-//        it("supports number params", function (done) {
-//            router.findRoute("/news/page/2/").then(function (route, params) {
-//                expect(route).toBe(routeWithPageNumber);
-//                expect(params).toEqual({
-//                    page: 2
-//                });
-//                done();
-//            });
-//        });
-//
-//        it("supports string params", function (done) {
-//            router.findRoute("/page/about/").then(function (route, params) {
-//                expect(route).toBe(routeWithPageName);
-//                expect(params).toEqual({
-//                    name: 'about'
-//                });
-//                done();
-//            });
-//        });
-//    });
+
+    describe("has a tolerateTrailingSlash option:", function () {
+        var router = new Router();
+        var routeA = router.route("/route/a");
+        var routeB = router.route("/route/b/");
+        var routeC = router.route("/route/c");
+        router.route("/route/c/");
+        var routeD = router.route("/route/d/");
+        router.route("/route/d");
+
+        it("should search path without trailing slash", function (done) {
+            router.findRoute("/route/a/", {
+                tolerateTrailingSlash: true
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeA);
+                }
+            });
+        });
+
+        it("should search path with trailing slash", function (done) {
+            router.findRoute("/route/b", {
+                tolerateTrailingSlash: true
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeB);
+                }
+            });
+        });
+
+        it("should respect route priority for path without trailing slash", function (done) {
+            router.findRoute("/route/c", {
+                tolerateTrailingSlash: true
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeC);
+                }
+            });
+        });
+
+        it("should respect route priority for path with trailing slash", function (done) {
+            router.findRoute("/route/d/", {
+                tolerateTrailingSlash: true
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeD);
+                }
+            });
+        });
+    });
 });
