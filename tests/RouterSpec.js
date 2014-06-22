@@ -210,6 +210,7 @@ describe("router", function () {
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
                 }
+                done();
             });
         });
 
@@ -221,6 +222,7 @@ describe("router", function () {
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeB);
                 }
+                done();
             });
         });
 
@@ -232,6 +234,7 @@ describe("router", function () {
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeC);
                 }
+                done();
             });
         });
 
@@ -243,6 +246,7 @@ describe("router", function () {
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeD);
                 }
+                done();
             });
         });
     });
