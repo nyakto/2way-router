@@ -6,9 +6,7 @@
 ```js
 var Router = require('2way-router');
 var router = new Router();
-
 // you must provide your own controllers
-
 router.route('/')
     .name('main')
     .controller(mainPageController);
