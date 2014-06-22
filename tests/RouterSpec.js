@@ -144,6 +144,54 @@ describe("router", function () {
             });
         });
     });
+
+    describe("supports regexp params:", function () {
+        var router = new Router();
+        var routeA = router.route("/news/page/{page ~ /\\d+/}");
+        var routeB = router.route("/news/archive/{year ~ /\\d{4}/}-{month ~ /\\d{2}/}-{day ~ /\\d{2}/}");
+        var routeC = router.route("/news/{id ~ /\\d+/}");
+
+        it("should match '/news/page/13' to routeA with page='13'", function (done) {
+            router.findRoute("/news/page/13").always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeA);
+                    expect(p.valueOf().params).toEqual({
+                        page: '13'
+                    });
+                }
+                done();
+            });
+        });
+
+        it("should match '/news/archive/2014-06-21' to routeB with year='2014', month='06', day='21'", function (done) {
+            router.findRoute("/news/archive/2014-06-21").always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeB);
+                    expect(p.valueOf().params).toEqual({
+                        year: '2014',
+                        month: '06',
+                        day: '21'
+                    });
+                }
+                done();
+            });
+        });
+
+        it("should match '/news/100500' to routeC with id='100500'", function (done) {
+            router.findRoute("/news/100500").always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeC);
+                    expect(p.valueOf().params).toEqual({
+                        id: '100500'
+                    });
+                }
+                done();
+            });
+        });
+    });
 //
 //    describe("with tolerance to trailing slash", function () {
 //        var router = new Router();
