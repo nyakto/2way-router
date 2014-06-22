@@ -52,9 +52,11 @@ Router.prototype.route = function (pathTemplate) {
 
 /**
  * @param {string} path
+ * @param {object} [options]
+ * @param {boolean} [options.tolerateTrailingSlash=false]
  * @returns {Promise<RouteMatch>}
  */
-Router.prototype.findRoute = function (path) {
+Router.prototype.findRoute = function (path, options) {
     var byString = [
         {
             map: this.map,
@@ -63,6 +65,8 @@ Router.prototype.findRoute = function (path) {
         }
     ];
     var byMatcher = [];
+    options = options || {};
+    var tolerateTrailingSlash = Boolean(options.tolerateTrailingSlash);
 
     function resolve() {
         var info, token, map, stream, i, len, matcher, prefix, wrapper;
@@ -79,12 +83,22 @@ Router.prototype.findRoute = function (path) {
                         params: info.params
                     });
                 } else {
+                    if (!map.hasRoutes() && tolerateTrailingSlash && token !== '/' && map.hasPath('/')) {
+                        map = map.path('/');
+                    }
                     if (map.hasRoutes()) {
                         return vow.fulfill({
                             route: map.getFirstRoute(),
                             params: info.params
                         });
                     }
+                }
+            } else if (tolerateTrailingSlash && token === '/' && !stream.hasNext()) {
+                if (info.map.hasRoutes()) {
+                    return vow.fulfill({
+                        route: info.map.getFirstRoute(),
+                        params: info.params
+                    });
                 }
             }
             map = info.map;
