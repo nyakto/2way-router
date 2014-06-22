@@ -3,8 +3,12 @@
   "version": "0.0.1",
   "description": "2-way router",
   "main": "index.js",
-  "dependencies": {},
-  "directories": {},
+  "dependencies": {
+    "vow": "~0.3.13"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/nyakto/2way-router.git"

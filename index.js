@@ -1,155 +1,162 @@
-function Router() {
-    this._routes = [];
-    this._map = new RouteMap();
-}
+var vow = require('vow');
+var RouteMap = require('./lib/RouteMap');
+var RouteTokenStream = require('./lib/RouteTokenStream');
 
-function Route() {
-}
-
-function RouteMap() {
-    this._paths = {};
-    this._assignedRoute = null;
-}
-
-function splitPath(path) {
-    var pathArray = [],
-        re = /\//g,
-        pos = 0,
-        start,
-        match;
-    while ((match = re.exec(path)) !== null) {
-        start = re.lastIndex - match[0].length;
-        if (start > pos) {
-            pathArray.push(path.substr(pos, start - pos));
+function addParam(params, name, value) {
+    var result = {};
+    for (var k in params) {
+        if (params.hasOwnProperty(k)) {
+            result[k] = params[k];
         }
-        pathArray.push(match[0]);
-        pos = re.lastIndex;
     }
-    if (pos < path.length) {
-        pathArray.push(path.substr(pos));
-    }
-    return pathArray;
-}
-
-function preparePath(pathArray) {
-    var result = [];
-    Array.prototype.forEach.call(pathArray, function (path) {
-        if (typeof path === 'string') {
-            splitPath(path).forEach(function (path) {
-                result.push(path);
-            });
-        } else {
-            result.push(path);
-        }
-    });
+    result[name] = value;
     return result;
 }
 
-function defineRoute(route, map, paths) {
-    paths.forEach(function (path) {
-        map = map.createPath(path);
-    });
-    map.assignRoute(route);
+function tokenize(path) {
+    var tokens = [], pos = 0, index;
+    while ((index = path.indexOf('/', pos)) >= 0) {
+        if (index > pos) {
+            tokens.push(path.substr(pos, index - pos));
+        }
+        tokens.push('/');
+        pos = index + 1;
+    }
+    if (pos < path.length) {
+        tokens.push(path.substr(pos));
+    }
+    return new RouteTokenStream(tokens, 1, tokens[0]);
 }
 
-Router.Route = Route;
+/**
+ * @constructor
+ */
+function Router() {
+    this.map = new RouteMap();
+    this.types = {};
+    this.routes = [];
+    this.namedRoutes = {};
 
-RouteMap.prototype.createPath = function (path) {
-    if (this._paths.hasOwnProperty(path)) {
-        return this._paths[path];
-    }
-    var map = new RouteMap();
-    this._paths[path] = map;
-    return map;
-};
+    this.registerType(require('./lib/param/NumberParam'), ['int', 'number']);
+}
 
-RouteMap.prototype.findPath = function (path) {
-    if (this._paths.hasOwnProperty(path)) {
-        return this._paths[path];
-    }
-    return null;
-};
-
-RouteMap.prototype.assignRoute = function (route) {
-    this._assignedRoute = route;
-};
-
-RouteMap.prototype.getAssignedRoute = function () {
-    return this._assignedRoute;
-};
+Router.Route = require('./lib/Route');
 
 /**
- * @param {object} [params={}]
+ * @param {string} pathTemplate
+ * @returns {Router.Route}
  */
-Route.prototype.link = function (params) {
-};
-
-Router.getRoutes = function () {
-    return this._routes;
-};
-
-/**
- * @param {...string} paths
- * @returns Route
- */
-Router.prototype.route = function (paths) {
-    var route = new Route();
-    this._routes.push(route);
-    defineRoute(
-        route,
-        this._map,
-        preparePath(arguments)
-    );
-    return route;
+Router.prototype.route = function (pathTemplate) {
+    return new Router.Route(this, pathTemplate);
 };
 
 /**
  * @param {string} path
- * @param {object} [options]
- * @param {boolean} [options.ignoreEmpty=false]
- * @param {boolean} [options.tolerateTrailingSlash=false]
- * @param {function(Route)} callback
+ * @returns {Promise<RouteMatch>}
  */
-Router.prototype.detect = function (path, options, callback) {
-    var map = this._map,
-        nextMap,
-        len,
-        i;
+Router.prototype.findRoute = function (path) {
+    var byString = [
+        {
+            map: this.map,
+            stream: tokenize(path),
+            params: {}
+        }
+    ];
+    var byMatcher = [];
 
-    if (typeof options === 'function') {
-        callback = options;
-        options = {};
-    }
-
-    function tolerateTrailingSlash() {
-        return options.tolerateTrailingSlash;
-    }
-
-    function pathEndsWithSlash() {
-        return path.length > 0 && path[path.length - 1] === '/';
-    }
-
-    path = splitPath(path);
-    for (i = 0, len = path.length; i < len; ++i) {
-        nextMap = map.findPath(path[i]);
-        if (nextMap === null) {
-            if (i === len - 1 && pathEndsWithSlash() && tolerateTrailingSlash()) {
-                continue;
-            } else {
-                callback(null);
-                return;
+    function resolve() {
+        var info, token, map, stream, i, len, matcher, prefix, wrapper;
+        while (byString.length > 0) {
+            info = byString.pop();
+            stream = info.stream;
+            token = stream.peek();
+            if (info.map.hasPath(token)) {
+                map = info.map.path(token);
+                if (stream.hasNext()) {
+                    byString.push({
+                        map: map,
+                        stream: stream.next(),
+                        params: info.params
+                    });
+                } else {
+                    if (map.hasRoutes()) {
+                        return vow.fulfill({
+                            route: map.getFirstRoute(),
+                            params: info.params
+                        });
+                    }
+                }
+            }
+            map = info.map;
+            len = map.byMatcher.length;
+            for (i = 0; i < len; ++i) {
+                matcher = map.matchers[i];
+                prefix = stream.test(matcher.prefix);
+                if (prefix !== null) {
+                    byMatcher.push({
+                        map: map.byMatcher[i],
+                        matcher: matcher,
+                        stream: stream.skip(prefix.length),
+                        params: info.params
+                    });
+                }
             }
         }
-        map = nextMap;
-    }
-    var route = map.getAssignedRoute();
-    if (route === null && tolerateTrailingSlash() && !pathEndsWithSlash()) {
-        map = map.findPath('/');
-        if (map !== null) {
-            route = map.getAssignedRoute();
+        if (byMatcher.length > 0) {
+            info = byMatcher.shift();
+            wrapper = info.stream.wrap();
+            return info.matcher.parse(wrapper)
+                .then(function (value) {
+                    var name = info.matcher.name;
+                    stream = wrapper.getTokenStream();
+                    if (stream.isEmpty()) {
+                        if (info.map.hasRoutes()) {
+                            return vow.fulfill({
+                                route: info.map.getFirstRoute(),
+                                params: addParam(info.params, name, value)
+                            });
+                        }
+                    } else {
+                        byString.push({
+                            map: info.map,
+                            stream: stream,
+                            params: addParam(info.params, name, value)
+                        });
+                    }
+                    return resolve();
+                }, resolve);
         }
+        return vow.reject();
     }
-    callback(route);
+
+    return resolve();
+};
+
+/**
+ * @param {RouteParam} typeConstructor
+ * @param {string|string[]} names
+ */
+Router.prototype.registerType = function (typeConstructor, names) {
+    if (Object.prototype.toString.call(names) === '[object Array]') {
+        for (var i = 0; i < names.length; ++i) {
+            this.types[names[i]] = typeConstructor;
+        }
+    } else {
+        this.types[names] = typeConstructor;
+    }
+};
+
+/**
+ * @param {string} typeName
+ * @param {string} name
+ * @param {string} [prefix='']
+ * @returns {RouteParam}
+ */
+Router.prototype.createParam = function (typeName, name, prefix) {
+    if (this.types.hasOwnProperty(typeName)) {
+        return new this.types[typeName](name, prefix || '');
+    }
+    return null;
 };
 
 module.exports = Router;
