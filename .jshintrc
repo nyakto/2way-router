@@ -7,5 +7,6 @@
     "eqeqeq": true,
     "undef": true,
     "bitwise": true,
-    "node": true
+    "node": true,
+    "loopfunc": true
 }

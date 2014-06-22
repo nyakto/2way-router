@@ -1,4 +1,5 @@
 var vow = require('vow');
+var Route = require('./lib/Route');
 var RouteMap = require('./lib/RouteMap');
 var RouteTokenStream = require('./lib/RouteTokenStream');
 
@@ -40,14 +41,14 @@ function Router() {
     this.registerType(require('./lib/param/NumberParam'), ['int', 'number']);
 }
 
-Router.Route = require('./lib/Route');
+Router.Route = Route;
 
 /**
  * @param {string} pathTemplate
- * @returns {Router.Route}
+ * @returns {Route}
  */
 Router.prototype.route = function (pathTemplate) {
-    return new Router.Route(this, pathTemplate);
+    return new Route(this, pathTemplate);
 };
 
 /**
@@ -171,6 +172,18 @@ Router.prototype.createParam = function (typeName, name, prefix) {
         return new this.types[typeName](name, prefix || '');
     }
     return null;
+};
+
+/**
+ * @param {string} routeName
+ * @param {object} [params]
+ * @returns {Promise<string>}
+ */
+Router.prototype.url = function (routeName, params) {
+    if (this.namedRoutes.hasOwnProperty(routeName)) {
+        return this.namedRoutes[routeName].url(params);
+    }
+    return vow.reject();
 };
 
 module.exports = Router;

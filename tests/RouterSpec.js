@@ -250,4 +250,86 @@ describe("router", function () {
             });
         });
     });
+
+    describe("supports creating urls for routes:", function () {
+        var router = new Router();
+        var news = router.route("/news/").name("news");
+        var newsArchive = router.route("/news/archive/{year:int}-{month:int}-{day:int}/").name("newsArchive");
+        var newsPublication = router.route("/news/{id:int}/").name("newsPublication");
+
+        it("should create url '/news/' from news route", function (done) {
+            news.url().always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf()).toBe("/news/");
+                }
+                done();
+            });
+        });
+
+        it("should create url '/news/' from route named 'news'", function (done) {
+            router.url("news").always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf()).toBe("/news/");
+                }
+                done();
+            });
+        });
+
+        it("should create url '/news/archive/2014-6-21/' from newsArchive route with year=2014, month=6, day=21", function (done) {
+            newsArchive.url({
+                year: 2014,
+                month: 6,
+                day: 21
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf()).toBe("/news/archive/2014-6-21/");
+                }
+                done();
+            });
+        });
+
+        it("should create url '/news/archive/2014-6-21/' from route named 'newsArchive' with year=2014, month=6, day=21", function (done) {
+            router.url("newsArchive", {
+                year: 2014,
+                month: 6,
+                day: 21
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf()).toBe("/news/archive/2014-6-21/");
+                }
+                done();
+            });
+        });
+
+        it("should create url '/news/100500/' from newsPublication route with id=100500", function (done) {
+            newsPublication.url({
+                id: 100500
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf()).toBe("/news/100500/");
+                }
+                done();
+            });
+        });
+
+        it("should create url '/news/100500/?a=1&b=2' from route named 'newsPublication' with id=100500, a=1, b=2, c=null", function (done) {
+            router.url("newsPublication", {
+                id: 100500,
+                a: 1,
+                b: 2,
+                c: null
+            }).always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf()).toBe("/news/100500/?a=1&b=2");
+                }
+                done();
+            });
+        });
+    });
 });
