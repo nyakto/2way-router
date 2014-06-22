@@ -1,6 +1,7 @@
 2way-router
 ===========
 > routing plugin for node.js
+
 ## Usage
 #### Defining routes
 ```js
