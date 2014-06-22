@@ -14,7 +14,7 @@
     "url": "git://github.com/nyakto/2way-router.git"
   },
   "keywords": [
-    "router"
+    "router", "two-way", "async", "promises"
   ],
   "scripts": {
     "test": "./node_modules/.bin/jasmine-node tests"
