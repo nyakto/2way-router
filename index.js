@@ -176,7 +176,7 @@ Router.prototype.findRoute = function (url, options) {
                     return resolve();
                 }, resolve);
         }
-        return vow.reject();
+        return vow.reject(Error('route not found'));
     }
 
     return resolve();
@@ -218,7 +218,7 @@ Router.prototype.url = function (routeName, params) {
     if (this.namedRoutes.hasOwnProperty(routeName)) {
         return this.namedRoutes[routeName].url(params);
     }
-    return vow.reject();
+    return vow.reject(Error('no route with name "' + routeName + '"'));
 };
 
 module.exports = Router;
