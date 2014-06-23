@@ -152,7 +152,8 @@ describe("router", function () {
         var router = new Router();
         var routeA = router.route("/news/page/{page ~ /\\d+/}");
         var routeB = router.route("/news/archive/{year ~ /\\d{4}/}-{month ~ /\\d{2}/}-{day ~ /\\d{2}/}");
-        var routeC = router.route("/news/{id ~ /\\d+/}");
+        var routeC = router.route("/news/{id:int}");
+        var routeD = router.route('/news/{id:int}/comments');
 
         it("should match '/news/page/13' to routeA with page='13'", function (done) {
             router.findRoute("/news/page/13").always(function (p) {
@@ -188,7 +189,20 @@ describe("router", function () {
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeC);
                     expect(p.valueOf().params.merge()).toEqual({
-                        id: '100500'
+                        id: 100500
+                    });
+                }
+                done();
+            });
+        });
+
+        it("should match '/news/100500/comments' to routeD with id='100500'", function (done) {
+            router.findRoute("/news/100500/comments").always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeD);
+                    expect(p.valueOf().params.merge()).toEqual({
+                        id: 100500
                     });
                 }
                 done();
