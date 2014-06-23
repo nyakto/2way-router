@@ -2,6 +2,7 @@ var vow = require('vow');
 var Route = require('./lib/Route');
 var RouteMap = require('./lib/RouteMap');
 var RouteParams = require('./lib/RouteParams');
+var RegExpParam = require('./lib/param/RegExpParam');
 var RouteTokenStream = require('./lib/RouteTokenStream');
 
 function parseUrl(url) {
@@ -54,6 +55,7 @@ function Router() {
     this.types = {};
     this.routes = [];
     this.namedRoutes = {};
+    this.params = {};
 
     this.registerType(require('./lib/param/NumberParam'), ['int', 'number']);
 }
@@ -204,9 +206,27 @@ Router.prototype.registerType = function (typeConstructor, names) {
  */
 Router.prototype.createParam = function (typeName, name, prefix) {
     if (this.types.hasOwnProperty(typeName)) {
-        return new this.types[typeName](name, prefix || '');
+        var key = typeName + ':' + name + ':' + prefix;
+        if (!this.params.hasOwnProperty(key)) {
+            this.params[key] = new this.types[typeName](name, prefix || '');
+        }
+        return this.params[key];
     }
     return null;
+};
+
+/**
+ * @param {string} name
+ * @param {string} pattern
+ * @param {string} [prefix='']
+ * @returns {RegExpParam}
+ */
+Router.prototype.createRegExpParam = function (name, pattern, prefix) {
+    var key = 'regexp:' + name + ':' + pattern + ':' + prefix;
+    if (!this.params.hasOwnProperty(key)) {
+        this.params[key] = new RegExpParam(name, prefix, pattern);
+    }
+    return this.params[key];
 };
 
 /**
