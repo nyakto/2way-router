@@ -95,7 +95,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         page: 1
                     });
                 }
@@ -108,7 +108,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         page: 205
                     });
                 }
@@ -121,7 +121,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeB);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         year: 2014,
                         month: 6,
                         day: 21
@@ -136,7 +136,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeC);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         id: 100500
                     });
                 }
@@ -156,7 +156,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         page: '13'
                     });
                 }
@@ -169,7 +169,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeB);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         year: '2014',
                         month: '06',
                         day: '21'
@@ -184,7 +184,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeC);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         id: '100500'
                     });
                 }
