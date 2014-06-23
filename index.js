@@ -1,7 +1,24 @@
 var vow = require('vow');
 var Route = require('./lib/Route');
 var RouteMap = require('./lib/RouteMap');
+var RouteParams = require('./lib/RouteParams');
 var RouteTokenStream = require('./lib/RouteTokenStream');
+
+function parseUrl(url) {
+    var m = /^([^?#]*?)(?:\?([^#]*))?(?:#(.*))?$/.exec(url);
+    if (m) {
+        return {
+            path: m[1],
+            queryString: m[2] || '',
+            hash: m[3] || ''
+        };
+    }
+    return {
+        path: url,
+        queryString: '',
+        hash: ''
+    };
+}
 
 function addParam(params, name, value) {
     var result = {};
@@ -52,22 +69,40 @@ Router.prototype.route = function (pathTemplate) {
 };
 
 /**
- * @param {string} path
+ * @param {string} url
  * @param {object} [options]
  * @param {boolean} [options.tolerateTrailingSlash=false]
  * @returns {Promise<RouteMatch>}
  */
-Router.prototype.findRoute = function (path, options) {
+Router.prototype.findRoute = function (url, options) {
+    var urlInfo = parseUrl(url);
     var byString = [
         {
             map: this.map,
-            stream: tokenize(path),
+            stream: tokenize(urlInfo.path),
             params: {}
         }
     ];
     var byMatcher = [];
     options = options || {};
     var tolerateTrailingSlash = Boolean(options.tolerateTrailingSlash);
+
+    function buildRouteParams(routeParams) {
+        var result = new RouteParams(routeParams);
+        if (urlInfo.queryString.length > 0) {
+            var pairs = urlInfo.queryString.split('&');
+            for (var i = 0, len = pairs.length; i < len; ++i) {
+                var pair = pairs[i];
+                var m = /^([^=]+)=(.*)$/.exec(pair);
+                if (m) {
+                    result.addQueryParamValue(decodeURIComponent(m[1]), decodeURIComponent(m[2]));
+                } else {
+                    result.addQueryParamValue(decodeURIComponent(pair), '');
+                }
+            }
+        }
+        return result;
+    }
 
     function resolve() {
         var info, token, map, stream, i, len, matcher, prefix, wrapper;
@@ -90,7 +125,7 @@ Router.prototype.findRoute = function (path, options) {
                     if (map.hasRoutes()) {
                         return vow.fulfill({
                             route: map.getFirstRoute(),
-                            params: info.params
+                            params: buildRouteParams(info.params)
                         });
                     }
                 }
@@ -98,7 +133,7 @@ Router.prototype.findRoute = function (path, options) {
                 if (info.map.hasRoutes()) {
                     return vow.fulfill({
                         route: info.map.getFirstRoute(),
-                        params: info.params
+                        params: buildRouteParams(info.params)
                     });
                 }
             }
@@ -128,7 +163,7 @@ Router.prototype.findRoute = function (path, options) {
                         if (info.map.hasRoutes()) {
                             return vow.fulfill({
                                 route: info.map.getFirstRoute(),
-                                params: addParam(info.params, name, value)
+                                params: buildRouteParams(addParam(info.params, name, value))
                             });
                         }
                     } else {

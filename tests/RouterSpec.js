@@ -104,11 +104,14 @@ describe("router", function () {
         });
 
         it("should match '/news/page/205/' to routeA with page=205", function (done) {
-            router.findRoute("/news/page/205/").always(function (p) {
+            router.findRoute("/news/page/205/?a=1&a=3&b=2&c").always(function (p) {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
                     expect(p.valueOf().params.merge()).toEqual({
+                        a: [ '1', '3' ],
+                        b: [ '2' ],
+                        c: [ '' ],
                         page: 205
                     });
                 }
