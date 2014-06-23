@@ -113,3 +113,33 @@ app.use(function (req, res) {
 });
 app.listen(8080);
 ```
+
+#### API
+##### Router
+
+```router.route(pathTemplate)``` - creates new ```Route```
+
+```router.findRoute(url, [options])``` - searchs for matching route, returns ```Promise<Route>```
+
+```router.url(routeName, [params])``` - creates url for route with name *routeName*, returns ```Promise<string>```
+
+```router.registerType(typeConstructor, names)``` - registers new param type for further usage in routes, must be called before any ```router.route``` calls, type example can be found at [NumberParam.js]
+
+[NumberParam.js]: lib/param/NumberParam.js
+
+##### Route
+
+```route.name([newName])``` - get/set route name
+
+```route.controller([newController])``` - get/set route controller
+
+```route.url([params])``` - creates url for this route, returns ```Promise<string>```
+
+##### RouteParams
+
+```params.getRouteParam(name, [defaultValue=null])``` - get route param value (for example ```id``` in route ```"/news/{id:int}/"```)
+
+```params.getQueryParam(name, [defaultValue=null])``` - get query string param with given *name* (last one if many are present), returns ```string```
+
+```params.getQueryParamValues(name)``` - get all values for query string param with given *name*, returns ```string[]```
+
