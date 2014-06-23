@@ -80,7 +80,7 @@ function pad(value, length) {
 
 function createPage(name, route) {
     function pageController(req, res, params) {
-		var pageContent = 'page: ' + name + ', params: <pre>' + JSON.stringify(params, null, '  ') + '</pre>';
+		var pageContent = 'page: ' + name + ', params: <pre>' + JSON.stringify(params.merge(), null, '  ') + '</pre>';
 		vow.all(links.map(function (link) {
 			return router.url(link.page, link.params || {});
 		})).then(function (urls) {
@@ -105,7 +105,7 @@ createPage('news-publication', '/news/{id:int}');
 
 var app = express();
 app.use(function (req, res) {
-	router.findRoute(req.path).then(function (info) {
+	router.findRoute(req.url).then(function (info) {
 		info.route.controller()(req, res, info.params);
 	}, function () {
 		res.send(404, 'Not found');
@@ -113,3 +113,33 @@ app.use(function (req, res) {
 });
 app.listen(8080);
 ```
+
+#### API
+##### Router
+
+```router.route(pathTemplate)``` - creates new ```Route```
+
+```router.findRoute(url, [options])``` - searchs for matching route, returns ```Promise<Route>```
+
+```router.url(routeName, [params])``` - creates url for route with name *routeName*, returns ```Promise<string>```
+
+```router.registerType(typeConstructor, names)``` - registers new param type for further usage in routes, must be called before any ```router.route``` calls, type example can be found at [NumberParam.js]
+
+[NumberParam.js]: lib/param/NumberParam.js
+
+##### Route
+
+```route.name([newName])``` - get/set route name
+
+```route.controller([newController])``` - get/set route controller
+
+```route.url([params])``` - creates url for this route, returns ```Promise<string>```
+
+##### RouteParams
+
+```params.getRouteParam(name, [defaultValue=null])``` - get route param value (for example ```id``` in route ```"/news/{id:int}/"```)
+
+```params.getQueryParam(name, [defaultValue=null])``` - get query string param with given *name* (last one if many are present), returns ```string```
+
+```params.getQueryParamValues(name)``` - get all values for query string param with given *name*, returns ```string[]```
+
