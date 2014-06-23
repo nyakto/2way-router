@@ -80,7 +80,7 @@ function pad(value, length) {
 
 function createPage(name, route) {
     function pageController(req, res, params) {
-		var pageContent = 'page: ' + name + ', params: <pre>' + JSON.stringify(params, null, '  ') + '</pre>';
+		var pageContent = 'page: ' + name + ', params: <pre>' + JSON.stringify(params.merge(), null, '  ') + '</pre>';
 		vow.all(links.map(function (link) {
 			return router.url(link.page, link.params || {});
 		})).then(function (urls) {
@@ -105,7 +105,7 @@ createPage('news-publication', '/news/{id:int}');
 
 var app = express();
 app.use(function (req, res) {
-	router.findRoute(req.path).then(function (info) {
+	router.findRoute(req.url).then(function (info) {
 		info.route.controller()(req, res, info.params);
 	}, function () {
 		res.send(404, 'Not found');
