@@ -95,7 +95,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         page: 1
                     });
                 }
@@ -104,11 +104,14 @@ describe("router", function () {
         });
 
         it("should match '/news/page/205/' to routeA with page=205", function (done) {
-            router.findRoute("/news/page/205/").always(function (p) {
+            router.findRoute("/news/page/205/?a=1&a=3&b=2&c").always(function (p) {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
+                        a: [ '1', '3' ],
+                        b: [ '2' ],
+                        c: [ '' ],
                         page: 205
                     });
                 }
@@ -121,7 +124,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeB);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         year: 2014,
                         month: 6,
                         day: 21
@@ -136,7 +139,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeC);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         id: 100500
                     });
                 }
@@ -149,14 +152,15 @@ describe("router", function () {
         var router = new Router();
         var routeA = router.route("/news/page/{page ~ /\\d+/}");
         var routeB = router.route("/news/archive/{year ~ /\\d{4}/}-{month ~ /\\d{2}/}-{day ~ /\\d{2}/}");
-        var routeC = router.route("/news/{id ~ /\\d+/}");
+        var routeC = router.route("/news/{id:int}");
+        var routeD = router.route('/news/{id:int}/comments');
 
         it("should match '/news/page/13' to routeA with page='13'", function (done) {
             router.findRoute("/news/page/13").always(function (p) {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         page: '13'
                     });
                 }
@@ -169,7 +173,7 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeB);
-                    expect(p.valueOf().params).toEqual({
+                    expect(p.valueOf().params.merge()).toEqual({
                         year: '2014',
                         month: '06',
                         day: '21'
@@ -184,8 +188,21 @@ describe("router", function () {
                 expect(p.isFulfilled()).toBe(true);
                 if (p.isFulfilled()) {
                     expect(p.valueOf().route).toBe(routeC);
-                    expect(p.valueOf().params).toEqual({
-                        id: '100500'
+                    expect(p.valueOf().params.merge()).toEqual({
+                        id: 100500
+                    });
+                }
+                done();
+            });
+        });
+
+        it("should match '/news/100500/comments' to routeD with id='100500'", function (done) {
+            router.findRoute("/news/100500/comments").always(function (p) {
+                expect(p.isFulfilled()).toBe(true);
+                if (p.isFulfilled()) {
+                    expect(p.valueOf().route).toBe(routeD);
+                    expect(p.valueOf().params.merge()).toEqual({
+                        id: 100500
                     });
                 }
                 done();
