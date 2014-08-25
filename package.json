@@ -1,10 +1,10 @@
 {
   "name": "2way-router",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "2-way router",
   "main": "index.js",
   "dependencies": {
-    "vow": "~0.3.13"
+    "promise": "^5.0.0"
   },
   "directories": {
     "lib": "./lib"
@@ -14,7 +14,10 @@
     "url": "git://github.com/nyakto/2way-router.git"
   },
   "keywords": [
-    "router", "two-way", "async", "promises"
+    "router",
+    "two-way",
+    "async",
+    "promises"
   ],
   "scripts": {
     "test": "./node_modules/.bin/jasmine-node tests"
