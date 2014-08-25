@@ -9,29 +9,63 @@ describe("router", function () {
         expect(route instanceof Router.Route).toBeTruthy();
     });
 
+    function always(promise, fn) {
+        promise.then(function (value) {
+            return fn(value, true);
+        }, function (error) {
+            return fn(error, false);
+        });
+    }
+
+    function expectRoute(promise, route, done) {
+        always(promise, function (value, resolved) {
+            expect(resolved).toBe(true);
+            if (resolved) {
+                expect(value.route).toBe(route);
+            }
+            done();
+        });
+    }
+
+    function expectValue(promise, expectedValue, done) {
+        always(promise, function (value, resolved) {
+            expect(resolved).toBe(true);
+            if (resolved) {
+                expect(value).toBe(expectedValue);
+            }
+            done();
+        });
+    }
+
+    function expectRouteWithParams(promise, route, params, done) {
+        always(promise, function (value, resolved) {
+            expect(resolved).toBe(true);
+            if (resolved) {
+                expect(value.route).toBe(route);
+                expect(value.params.merge()).toEqual(params);
+            }
+            done();
+        });
+    }
+
+    function shouldFail(promise, done) {
+        always(promise, function (value, resolved) {
+            expect(resolved).toBe(false);
+            done();
+        });
+    }
+
     describe("allows to findRoute route:", function () {
         var router = new Router();
         var routeA = router.route("/route/a");
         var routeB = router.route("/route/b");
 
         it("should match '/route/a' to routeA", function (done) {
-            router.findRoute("/route/a").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeA);
-                }
-                done();
-            });
+            expectRoute(router.findRoute("/route/a"), routeA, done);
         });
 
         it("should match '/route/b' to routeB", function (done) {
-            router.findRoute("/route/b").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeB);
-                }
-                done();
-            });
+            expectRoute(router.findRoute("/route/b"), routeB, done);
         });
     });
 
@@ -47,37 +81,19 @@ describe("router", function () {
         });
 
         it("should return correct route without trailing slash", function (done) {
-            router.findRoute("/route/a").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeA);
-                }
-                done();
-            });
+            expectRoute(router.findRoute("/route/a"), routeA, done);
         });
 
         it("should return correct route with trailing slash", function (done) {
-            router.findRoute("/route/a/").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeB);
-                }
-                done();
-            });
+            expectRoute(router.findRoute("/route/a/"), routeB, done);
         });
 
         it("should reject if no path with trailing slash", function (done) {
-            router.findRoute("/route/c/").always(function (p) {
-                expect(p.isRejected()).toBe(true);
-                done();
-            });
+            shouldFail(router.findRoute("/route/c/"), done);
         });
 
         it("should reject if no path without trailing slash", function (done) {
-            router.findRoute("/route/d").always(function (p) {
-                expect(p.isRejected()).toBe(true);
-                done();
-            });
+            shouldFail(router.findRoute("/route/d"), done);
         });
     });
 
@@ -91,60 +107,32 @@ describe("router", function () {
         var routeC = router.route("/news/{id:number}");
 
         it("should match '/news/page/1/' to routeA with page=1", function (done) {
-            router.findRoute("/news/page/1/").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        page: 1
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/page/1/"), routeA, {
+                page: 1
+            }, done);
         });
 
         it("should match '/news/page/205/' to routeA with page=205", function (done) {
-            router.findRoute("/news/page/205/?a=1&a=3&b=2&c").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        a: [ '1', '3' ],
-                        b: [ '2' ],
-                        c: [ '' ],
-                        page: 205
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/page/205/?a=1&a=3&b=2&c"), routeA, {
+                a: [ '1', '3' ],
+                b: [ '2' ],
+                c: [ '' ],
+                page: 205
+            }, done);
         });
 
         it("should match '/news/archive/2014-06-21/' to routeB with year=2014, month=6, day=21", function (done) {
-            router.findRoute("/news/archive/2014-06-21/").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeB);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        year: 2014,
-                        month: 6,
-                        day: 21
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/archive/2014-06-21/"), routeB, {
+                year: 2014,
+                month: 6,
+                day: 21
+            }, done);
         });
 
         it("should match '/news/100500' to routeC with id=100500", function (done) {
-            router.findRoute("/news/100500").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeC);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        id: 100500
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/100500"), routeC, {
+                id: 100500
+            }, done);
         });
     });
 
@@ -156,57 +144,29 @@ describe("router", function () {
         var routeD = router.route('/news/{id:int}/comments');
 
         it("should match '/news/page/13' to routeA with page='13'", function (done) {
-            router.findRoute("/news/page/13").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeA);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        page: '13'
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/page/13"), routeA, {
+                page: '13'
+            }, done);
         });
 
         it("should match '/news/archive/2014-06-21' to routeB with year='2014', month='06', day='21'", function (done) {
-            router.findRoute("/news/archive/2014-06-21").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeB);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        year: '2014',
-                        month: '06',
-                        day: '21'
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/archive/2014-06-21"), routeB, {
+                year: '2014',
+                month: '06',
+                day: '21'
+            }, done);
         });
 
         it("should match '/news/100500' to routeC with id='100500'", function (done) {
-            router.findRoute("/news/100500").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeC);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        id: 100500
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/100500"), routeC, {
+                id: 100500
+            }, done);
         });
 
         it("should match '/news/100500/comments' to routeD with id='100500'", function (done) {
-            router.findRoute("/news/100500/comments").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeD);
-                    expect(p.valueOf().params.merge()).toEqual({
-                        id: 100500
-                    });
-                }
-                done();
-            });
+            expectRouteWithParams(router.findRoute("/news/100500/comments"), routeD, {
+                id: 100500
+            }, done);
         });
     });
 
@@ -220,51 +180,27 @@ describe("router", function () {
         router.route("/route/d");
 
         it("should search path without trailing slash", function (done) {
-            router.findRoute("/route/a/", {
+            expectRoute(router.findRoute("/route/a/", {
                 tolerateTrailingSlash: true
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeA);
-                }
-                done();
-            });
+            }), routeA, done);
         });
 
         it("should search path with trailing slash", function (done) {
-            router.findRoute("/route/b", {
+            expectRoute(router.findRoute("/route/b", {
                 tolerateTrailingSlash: true
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeB);
-                }
-                done();
-            });
+            }), routeB, done);
         });
 
         it("should respect route priority for path without trailing slash", function (done) {
-            router.findRoute("/route/c", {
+            expectRoute(router.findRoute("/route/c", {
                 tolerateTrailingSlash: true
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeC);
-                }
-                done();
-            });
+            }), routeC, done);
         });
 
         it("should respect route priority for path with trailing slash", function (done) {
-            router.findRoute("/route/d/", {
+            expectRoute(router.findRoute("/route/d/", {
                 tolerateTrailingSlash: true
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf().route).toBe(routeD);
-                }
-                done();
-            });
+            }), routeD, done);
         });
     });
 
@@ -275,78 +211,42 @@ describe("router", function () {
         var newsPublication = router.route("/news/{id:int}/").name("newsPublication");
 
         it("should create url '/news/' from news route", function (done) {
-            news.url().always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf()).toBe("/news/");
-                }
-                done();
-            });
+            expectValue(news.url(), "/news/", done);
         });
 
         it("should create url '/news/' from route named 'news'", function (done) {
-            router.url("news").always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf()).toBe("/news/");
-                }
-                done();
-            });
+            expectValue(router.url("news"), "/news/", done);
         });
 
         it("should create url '/news/archive/2014-6-21/' from newsArchive route with year=2014, month=6, day=21", function (done) {
-            newsArchive.url({
+            expectValue(newsArchive.url({
                 year: 2014,
                 month: 6,
                 day: 21
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf()).toBe("/news/archive/2014-6-21/");
-                }
-                done();
-            });
+            }), "/news/archive/2014-6-21/", done);
         });
 
         it("should create url '/news/archive/2014-6-21/' from route named 'newsArchive' with year=2014, month=6, day=21", function (done) {
-            router.url("newsArchive", {
+            expectValue(router.url("newsArchive", {
                 year: 2014,
                 month: 6,
                 day: 21
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf()).toBe("/news/archive/2014-6-21/");
-                }
-                done();
-            });
+            }), "/news/archive/2014-6-21/", done);
         });
 
         it("should create url '/news/100500/' from newsPublication route with id=100500", function (done) {
-            newsPublication.url({
+            expectValue(newsPublication.url({
                 id: 100500
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf()).toBe("/news/100500/");
-                }
-                done();
-            });
+            }), "/news/100500/", done);
         });
 
         it("should create url '/news/100500/?a=1&b=2' from route named 'newsPublication' with id=100500, a=1, b=2, c=null", function (done) {
-            router.url("newsPublication", {
+            expectValue(router.url("newsPublication", {
                 id: 100500,
                 a: 1,
                 b: 2,
                 c: null
-            }).always(function (p) {
-                expect(p.isFulfilled()).toBe(true);
-                if (p.isFulfilled()) {
-                    expect(p.valueOf()).toBe("/news/100500/?a=1&b=2");
-                }
-                done();
-            });
+            }), "/news/100500/?a=1&b=2", done);
         });
     });
 });

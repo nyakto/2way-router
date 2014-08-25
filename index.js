@@ -1,4 +1,4 @@
-var vow = require('vow');
+var Promise = require('promise');
 var Route = require('./lib/Route');
 var RouteMap = require('./lib/RouteMap');
 var RouteParams = require('./lib/RouteParams');
@@ -106,82 +106,84 @@ Router.prototype.findRoute = function (url, options) {
         return result;
     }
 
-    function resolve() {
+    function resolveRoute() {
         var info, token, map, stream, i, len, matcher, prefix, wrapper;
-        while (byString.length > 0) {
-            info = byString.pop();
-            stream = info.stream;
-            token = stream.peek();
-            if (info.map.hasPath(token)) {
-                map = info.map.path(token);
-                if (stream.hasNext()) {
-                    byString.push({
-                        map: map,
-                        stream: stream.next(),
-                        params: info.params
-                    });
-                } else {
-                    if (!map.hasRoutes() && tolerateTrailingSlash && token !== '/' && map.hasPath('/')) {
-                        map = map.path('/');
+        return new Promise(function (resolve, reject) {
+            while (byString.length > 0) {
+                info = byString.pop();
+                stream = info.stream;
+                token = stream.peek();
+                if (info.map.hasPath(token)) {
+                    map = info.map.path(token);
+                    if (stream.hasNext()) {
+                        byString.push({
+                            map: map,
+                            stream: stream.next(),
+                            params: info.params
+                        });
+                    } else {
+                        if (!map.hasRoutes() && tolerateTrailingSlash && token !== '/' && map.hasPath('/')) {
+                            map = map.path('/');
+                        }
+                        if (map.hasRoutes()) {
+                            return resolve({
+                                route: map.getFirstRoute(),
+                                params: buildRouteParams(info.params)
+                            });
+                        }
                     }
-                    if (map.hasRoutes()) {
-                        return vow.fulfill({
-                            route: map.getFirstRoute(),
+                } else if (tolerateTrailingSlash && token === '/' && !stream.hasNext()) {
+                    if (info.map.hasRoutes()) {
+                        return resolve({
+                            route: info.map.getFirstRoute(),
                             params: buildRouteParams(info.params)
                         });
                     }
                 }
-            } else if (tolerateTrailingSlash && token === '/' && !stream.hasNext()) {
-                if (info.map.hasRoutes()) {
-                    return vow.fulfill({
-                        route: info.map.getFirstRoute(),
-                        params: buildRouteParams(info.params)
-                    });
-                }
-            }
-            map = info.map;
-            len = map.byMatcher.length;
-            for (i = 0; i < len; ++i) {
-                matcher = map.matchers[i];
-                prefix = stream.test(matcher.prefix);
-                if (prefix !== null) {
-                    byMatcher.push({
-                        map: map.byMatcher[i],
-                        matcher: matcher,
-                        stream: stream.skip(prefix.length),
-                        params: info.params
-                    });
-                }
-            }
-        }
-        if (byMatcher.length > 0) {
-            info = byMatcher.shift();
-            wrapper = info.stream.wrap();
-            return info.matcher.parse(wrapper)
-                .then(function (value) {
-                    var name = info.matcher.name;
-                    stream = wrapper.getTokenStream();
-                    if (stream.isEmpty()) {
-                        if (info.map.hasRoutes()) {
-                            return vow.fulfill({
-                                route: info.map.getFirstRoute(),
-                                params: buildRouteParams(addParam(info.params, name, value))
-                            });
-                        }
-                    } else {
-                        byString.push({
-                            map: info.map,
-                            stream: stream,
-                            params: addParam(info.params, name, value)
+                map = info.map;
+                len = map.byMatcher.length;
+                for (i = 0; i < len; ++i) {
+                    matcher = map.matchers[i];
+                    prefix = stream.test(matcher.prefix);
+                    if (prefix !== null) {
+                        byMatcher.push({
+                            map: map.byMatcher[i],
+                            matcher: matcher,
+                            stream: stream.skip(prefix.length),
+                            params: info.params
                         });
                     }
-                    return resolve();
-                }, resolve);
-        }
-        return vow.reject(Error('route not found'));
+                }
+            }
+            if (byMatcher.length > 0) {
+                info = byMatcher.shift();
+                wrapper = info.stream.wrap();
+                return info.matcher.parse(wrapper)
+                    .then(function (value) {
+                        var name = info.matcher.name;
+                        stream = wrapper.getTokenStream();
+                        if (stream.isEmpty()) {
+                            if (info.map.hasRoutes()) {
+                                return resolve({
+                                    route: info.map.getFirstRoute(),
+                                    params: buildRouteParams(addParam(info.params, name, value))
+                                });
+                            }
+                        } else {
+                            byString.push({
+                                map: info.map,
+                                stream: stream,
+                                params: addParam(info.params, name, value)
+                            });
+                        }
+                        return resolveRoute();
+                    }, resolveRoute).then(resolve);
+            }
+            reject(Error('route not found'));
+        });
     }
 
-    return resolve();
+    return resolveRoute();
 };
 
 /**
@@ -238,7 +240,7 @@ Router.prototype.url = function (routeName, params) {
     if (this.namedRoutes.hasOwnProperty(routeName)) {
         return this.namedRoutes[routeName].url(params);
     }
-    return vow.reject(Error('no route with name "' + routeName + '"'));
+    return Promise.reject(Error('no route with name "' + routeName + '"'));
 };
 
 module.exports = Router;
