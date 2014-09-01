@@ -56,6 +56,7 @@ function Router() {
     this.routes = [];
     this.namedRoutes = {};
     this.params = {};
+    this.urlResolvers = {};
 
     this.registerType(require('./lib/param/NumberParam'), ['int', 'number']);
 }
@@ -201,6 +202,16 @@ Router.prototype.registerType = function (typeConstructor, names) {
 };
 
 /**
+ * @param {string} name
+ * @param {function} resolver
+ * @returns {Router}
+ */
+Router.prototype.urlResolver = function (name, resolver) {
+    this.urlResolvers[name] = resolver;
+    return this;
+};
+
+/**
  * @param {string} typeName
  * @param {string} name
  * @param {string} [prefix='']
@@ -237,10 +248,19 @@ Router.prototype.createRegExpParam = function (name, pattern, prefix) {
  * @returns {Promise<string>}
  */
 Router.prototype.url = function (routeName, params) {
-    if (this.namedRoutes.hasOwnProperty(routeName)) {
-        return this.namedRoutes[routeName].url(params);
+    var _this = this;
+
+    function getUrl(routeName, params) {
+        if (_this.namedRoutes.hasOwnProperty(routeName)) {
+            return _this.namedRoutes[routeName].url(params);
+        }
+        return Promise.reject(Error('no route with name "' + routeName + '"'));
     }
-    return Promise.reject(Error('no route with name "' + routeName + '"'));
+
+    if (this.urlResolvers.hasOwnProperty(routeName)) {
+        return this.urlResolvers[routeName](params || {}, getUrl);
+    }
+    return getUrl(routeName, params);
 };
 
 module.exports = Router;
