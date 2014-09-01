@@ -249,4 +249,33 @@ describe("router", function () {
             }), "/news/100500/?a=1&b=2", done);
         });
     });
+
+    describe("supports url resolvers:", function () {
+        var router = new Router();
+        router.route("/news/")
+            .name("news");
+        router.route("/news/archive/{year:int}-{month:int}-{day:int}/")
+            .name("news.archive");
+
+        router.urlResolver("news", function (params, url) {
+            if (params.date) {
+                return url("news.archive", {
+                    year: params.date.getFullYear(),
+                    month: params.date.getMonth() + 1,
+                    day: params.date.getDate()
+                });
+            }
+            return url("news");
+        });
+
+        var date = new Date();
+        router.url("news").then(function (url) {
+            expect(url)
+                .toBe("/news/");
+        });
+        router.url("news", { date: date }).then(function (url) {
+            expect(url)
+                .toBe("/news/archive/" + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "/");
+        });
+    });
 });
