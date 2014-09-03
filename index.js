@@ -178,7 +178,7 @@ Router.prototype.findRoute = function (url, options) {
                             });
                         }
                         return resolveRoute();
-                    }, resolveRoute).then(resolve);
+                    }, resolveRoute).then(resolve, reject);
             }
             reject(Error('route not found'));
         });
