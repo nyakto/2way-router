@@ -135,6 +135,8 @@ app.listen(8080);
 
 ```route.url([params])``` - creates url for this route, returns ```Promise<string>```
 
+```route.setDefaultParams(params)``` - set default params for this route
+
 ##### RouteParams
 
 ```params.getRouteParam(name, [defaultValue=null])``` - get route param value (for example ```id``` in route ```"/news/{id:int}/"```)
