@@ -278,4 +278,25 @@ describe("router", function () {
                 .toBe("/news/archive/" + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + "/");
         });
     });
+
+    describe("supports default params:", function () {
+        var router = new Router();
+        var routeA = router.route("/news/")
+            .setDefaultParams({
+                page: 1
+            });
+        var routeB = router.route("/news/page/{page:int}/");
+
+        it("should match '/news/' to routeA with page=1", function (done) {
+            expectRouteWithParams(router.findRoute("/news/"), routeA, {
+                page: 1
+            }, done);
+        });
+
+        it("should match '/news/page/2/' to routeB with page=2", function (done) {
+            expectRouteWithParams(router.findRoute("/news/page/2/"), routeB, {
+                page: 2
+            }, done);
+        });
+    });
 });

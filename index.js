@@ -184,7 +184,10 @@ Router.prototype.findRoute = function (url, options) {
         });
     }
 
-    return resolveRoute();
+    return resolveRoute().then(function (result) {
+        result.params.setDefaultParams(result.route.defaultParams);
+        return result;
+    });
 };
 
 /**
