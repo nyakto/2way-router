@@ -1,6 +1,6 @@
 {
   "name": "2way-router",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "2-way router",
   "main": "index.js",
   "dependencies": {
