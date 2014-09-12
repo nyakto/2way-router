@@ -42,13 +42,13 @@ router.url('news-archive', {
 #### Full example
 You will need to run
 ```bash
-npm install 2way-router express vow
+npm install 2way-router express promise
 ```
 Example application:
 ```js
 var Router = require('2way-router');
+var Promise = require('promise');
 var express = require('express');
-var vow = require('vow');
 var router = new Router();
 var links = [
 	{
@@ -81,7 +81,7 @@ function pad(value, length) {
 function createPage(name, route) {
     function pageController(req, res, params) {
 		var pageContent = 'page: ' + name + ', params: <pre>' + JSON.stringify(params.merge(), null, '  ') + '</pre>';
-		vow.all(links.map(function (link) {
+		Promise.all(links.map(function (link) {
 			return router.url(link.page, link.params || {});
 		})).then(function (urls) {
 			pageContent += '<ul>';
@@ -89,7 +89,7 @@ function createPage(name, route) {
 				pageContent += '<li><a href="' + href + '">' + links[index].text + '</a></li>';
 			});
 			pageContent += '</ul>';
-			res.send(200, pageContent);
+			res.status(200).send(pageContent);
 		});
     }
 
@@ -108,7 +108,7 @@ app.use(function (req, res) {
 	router.findRoute(req.url).then(function (info) {
 		info.route.controller()(req, res, info.params);
 	}, function () {
-		res.send(404, 'Not found');
+		res.status(404).send('Not found');
 	});
 });
 app.listen(8080);
