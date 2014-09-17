@@ -47,6 +47,10 @@ function tokenize(path) {
     return new RouteTokenStream(tokens, 1, tokens[0]);
 }
 
+function decodeURIParam(param) {
+    return decodeURIComponent(param.replace(/\+/g, '%20'));
+}
+
 /**
  * @constructor
  */
@@ -98,9 +102,9 @@ Router.prototype.findRoute = function (url, options) {
                 var pair = pairs[i];
                 var m = /^([^=]+)=(.*)$/.exec(pair);
                 if (m) {
-                    result.addQueryParamValue(decodeURIComponent(m[1]), decodeURIComponent(m[2]));
+                    result.addQueryParamValue(decodeURIParam(m[1]), decodeURIParam(m[2]));
                 } else {
-                    result.addQueryParamValue(decodeURIComponent(pair), '');
+                    result.addQueryParamValue(decodeURIParam(pair), '');
                 }
             }
         }
