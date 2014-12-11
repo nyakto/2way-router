@@ -114,9 +114,9 @@ describe("router", function () {
 
         it("should match '/news/page/205/' to routeA with page=205", function (done) {
             expectRouteWithParams(router.findRoute("/news/page/205/?a=1&a=3&b=2&c"), routeA, {
-                a: [ '1', '3' ],
-                b: [ '2' ],
-                c: [ '' ],
+                a: '3',
+                b: '2',
+                c: '',
                 page: 205
             }, done);
         });
