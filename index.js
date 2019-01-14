@@ -252,9 +252,10 @@ Router.prototype.createRegExpParam = function (name, pattern, prefix) {
 /**
  * @param {string} routeName
  * @param {object} [params]
+ * @param {any} [options]
  * @returns {Promise<string>}
  */
-Router.prototype.url = function (routeName, params) {
+Router.prototype.url = function (routeName, params, options) {
     var _this = this;
 
     function getUrl(routeName, params) {
@@ -265,7 +266,7 @@ Router.prototype.url = function (routeName, params) {
     }
 
     if (this.urlResolvers.hasOwnProperty(routeName)) {
-        return this.urlResolvers[routeName](params || {}, getUrl);
+        return this.urlResolvers[routeName](params || {}, getUrl, options);
     }
     return getUrl(routeName, params);
 };
